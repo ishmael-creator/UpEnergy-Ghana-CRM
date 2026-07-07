@@ -60,3 +60,17 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER tickets_updated_at
 BEFORE UPDATE ON tickets
 FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+
+-- 1. Add an attachments column to store Google Drive links
+ALTER TABLE tickets 
+ADD COLUMN attachments TEXT;
+
+-- 2. Create the notifications table for in-app CX alerts
+CREATE TABLE notifications (
+    id SERIAL PRIMARY KEY,
+    message TEXT NOT NULL,
+    ticket_id INTEGER REFERENCES tickets(id) ON DELETE CASCADE,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);

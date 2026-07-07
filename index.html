@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>UpEnergy CX Platform</title>
+
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;background:#f5f6fa;color:#1a1a2e;min-height:100vh}
@@ -133,9 +134,34 @@ tr.row-hover:hover td{background:#f8fafc;cursor:pointer}
 .toast{position:fixed;bottom:24px;right:24px;background:#1a1a2e;color:#fff;padding:12px 20px;border-radius:8px;font-size:13px;z-index:999;opacity:0;transition:.3s;pointer-events:none}
 .toast.show{opacity:1}
 .hidden{display:none!important}
+#login-screen {
+  position: fixed; inset: 0; background: #0f1923; z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+}
+.login-box {
+  background: #fff; padding: 32px; border-radius: 12px;
+  width: 100%; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,.2);
+}
+.login-box h2 {
+  margin-bottom: 24px; font-size: 20px; color: #1a1a2e; text-align: center;
+}
 </style>
 </head>
 <body>
+  <div id="login-screen">
+  <div class="login-box">
+    <h2>UpEnergy CRM Login</h2>
+    <div class="form-group" style="margin-bottom: 16px;">
+      <label>Email Address</label>
+      <input type="email" id="login-email" placeholder="name@upenergygroup.com">
+    </div>
+    <div class="form-group" style="margin-bottom: 24px;">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="••••••••">
+    </div>
+    <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="handleLogin()" id="login-btn">Log In</button>
+  </div>
+</div>
 <div id="app">
 <aside id="sidebar">
   <div class="logo">
@@ -162,17 +188,18 @@ tr.row-hover:hover td{background:#f8fafc;cursor:pointer}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Reports
     </a>
     <a class="nav-link" data-page="carbon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/></svg>Carbon Credits
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Carbon Credits
     </a>
   </nav>
   <div class="sidebar-footer">
     <div class="avatar">
-      <div class="avatar-circle">RA</div>
+      <div class="avatar-circle" id="current-user-initials">--</div>
       <div>
-        <div style="color:#e2e8f0;font-size:12px;font-weight:600">Rachel Ababio</div>
-        <div style="color:#475569;font-size:11px">CX Specialist</div>
+        <div style="color:#e2e8f0;font-size:12px;font-weight:600" id="current-user-name">Loading...</div>
+        <div style="color:#475569;font-size:11px" id="current-user-role">User</div>
       </div>
     </div>
+    <button class="btn btn-sm" style="margin-top: 12px; width: 100%; background: transparent; color: #94a3b8; border-color: #334155;" onclick="handleLogout()">Log Out</button>
   </div>
 </aside>
 
@@ -186,7 +213,6 @@ tr.row-hover:hover td{background:#f8fafc;cursor:pointer}
 
   <div class="page-content">
 
-    <!-- DASHBOARD -->
     <div id="page-dashboard" class="page">
       <div class="stats-grid" id="dash-stats"><div class="loading">Loading stats…</div></div>
       <div class="card">
@@ -201,7 +227,6 @@ tr.row-hover:hover td{background:#f8fafc;cursor:pointer}
       </div>
     </div>
 
-    <!-- TICKETS -->
     <div id="page-tickets" class="page hidden">
       <div class="card">
         <div class="tab-bar" id="ticket-tabs"></div>
@@ -227,12 +252,7 @@ tr.row-hover:hover td{background:#f8fafc;cursor:pointer}
       </div>
     </div>
 
-    <!-- AGENTS -->
     <div id="page-agents" class="page hidden">
-      <div class="notice">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        Agents do not have CRM access. They report issues via Google Form, WhatsApp, or by calling Rachel directly. This directory is for CX reference only.
-      </div>
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap">
         <div class="search-wrap" style="flex:1;max-width:280px">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -248,7 +268,6 @@ tr.row-hover:hover td{background:#f8fafc;cursor:pointer}
       <div class="agents-grid" id="agents-grid"><div class="loading">Loading agents…</div></div>
     </div>
 
-    <!-- REPORTS -->
     <div id="page-reports" class="page hidden">
       <div class="stats-grid" id="reports-stats"></div>
       <div class="reports-grid">
@@ -259,18 +278,39 @@ tr.row-hover:hover td{background:#f8fafc;cursor:pointer}
       </div>
     </div>
 
-    <!-- CARBON -->
     <div id="page-carbon" class="page hidden">
-      <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <p style="color:var(--muted); font-size:13px;">Manage environmental impact and track tCO₂e issuances.</p>
         <button class="btn btn-primary" onclick="openCarbonModal()">+ Log Carbon Entry</button>
       </div>
-      <div class="carbon-cards" id="carbon-product-cards"></div>
+      
+      <div class="carbon-cards" id="carbon-product-cards">
+        <div class="loading">Loading carbon stats…</div>
+      </div>
+      
       <div class="card">
-        <div class="card-header"><h2>Carbon Credit Entries</h2></div>
-        <div style="overflow-x:auto"><table>
-          <thead><tr><th>Ref</th><th>Product</th><th>Serial</th><th>Region</th><th>Credits (tCO₂e)</th><th>Date</th><th>Status</th><th>Action</th></tr></thead>
-          <tbody id="carbon-table"></tbody>
-        </table></div>
+        <div class="card-header">
+          <h2>Carbon Credit Ledger</h2>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th>Ref</th>
+                <th>Product</th>
+                <th>Serial</th>
+                <th>Region</th>
+                <th>Credits (tCO₂e)</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="carbon-table">
+              <tr><td colspan="8"><div class="loading">Loading ledger…</div></td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
@@ -278,7 +318,6 @@ tr.row-hover:hover td{background:#f8fafc;cursor:pointer}
 </main>
 </div>
 
-<!-- NEW TICKET MODAL -->
 <div class="modal-overlay hidden" id="ticket-modal">
   <div class="modal-box">
     <div class="modal-header"><h3>Log New Ticket</h3><button class="btn btn-sm" onclick="closeModal('ticket-modal')">✕</button></div>
@@ -332,7 +371,6 @@ tr.row-hover:hover td{background:#f8fafc;cursor:pointer}
   </div>
 </div>
 
-<!-- ADD AGENT MODAL -->
 <div class="modal-overlay hidden" id="agent-modal">
   <div class="modal-box">
     <div class="modal-header"><h3>Add Agent / Officer</h3><button class="btn btn-sm" onclick="closeModal('agent-modal')">✕</button></div>
@@ -357,7 +395,6 @@ tr.row-hover:hover td{background:#f8fafc;cursor:pointer}
   </div>
 </div>
 
-<!-- CARBON MODAL -->
 <div class="modal-overlay hidden" id="carbon-modal">
   <div class="modal-box">
     <div class="modal-header"><h3>Log Carbon Credit Entry</h3><button class="btn btn-sm" onclick="closeModal('carbon-modal')">✕</button></div>
@@ -381,12 +418,10 @@ tr.row-hover:hover td{background:#f8fafc;cursor:pointer}
   </div>
 </div>
 
-<!-- TICKET DETAIL PANEL -->
 <div class="detail-overlay hidden" id="detail-overlay" onclick="handleDetailOverlayClick(event)">
   <div class="detail-panel" id="detail-panel"></div>
 </div>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
@@ -411,13 +446,87 @@ function statusBadge(s){
 function priClass(p){return `priority-${p}`}
 function closeModal(id){document.getElementById(id).classList.add('hidden')}
 
-async function api(path,method='GET',body=null){
-  const opts={method,headers:{'Content-Type':'application/json'}};
-  if(body) opts.body=JSON.stringify(body);
-  const res=await fetch(API+path,opts);
-  if(!res.ok){const e=await res.json();throw new Error(e.error||'API error');}
+async function api(path, method='GET', body=null) {
+  const token = localStorage.getItem('crm_token');
+  const headers = {'Content-Type': 'application/json'};
+  if (token) headers['Authorization'] = `Bearer ${token}`; // Send secure token
+  
+  const opts = {method, headers};
+  if (body) opts.body = JSON.stringify(body);
+  
+  const res = await fetch(API + path, opts);
+  if (!res.ok) {
+    const e = await res.json();
+    if (res.status === 401) handleLogout(); // Kick user out if token expires
+    throw new Error(e.error || 'API error');
+  }
   return res.json();
 }
+
+// ── AUTHENTICATION ───────────────────────────────────────────
+async function handleLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!email || !password) return toast('Please enter email and password');
+  
+  const btn = document.getElementById('login-btn');
+  btn.textContent = 'Logging in...'; btn.disabled = true;
+  
+  try {
+    const res = await fetch(API + '/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Login failed');
+    
+    // Save secure token and user data to the browser
+    localStorage.setItem('crm_token', data.token);
+    localStorage.setItem('crm_user', JSON.stringify(data.user));
+    
+    // Switch to Dashboard
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    updateUserUI(data.user);
+    toast('Welcome back, ' + data.user.name);
+    renderDashboard();
+  } catch(e) {
+    toast(e.message);
+  } finally {
+    btn.textContent = 'Log In'; btn.disabled = false;
+  }
+}
+
+function handleLogout() {
+  localStorage.removeItem('crm_token');
+  localStorage.removeItem('crm_user');
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('app').classList.add('hidden');
+  document.getElementById('login-password').value = '';
+}
+
+function updateUserUI(user) {
+  document.getElementById('current-user-name').textContent = user.name;
+  document.getElementById('current-user-role').textContent = user.role;
+  document.getElementById('current-user-initials').textContent = user.name.split(' ').map(n=>n[0]).join('').toUpperCase();
+}
+
+// ── INITIALIZATION OVERRIDE ──────────────────────────────────
+window.onload = () => {
+  const token = localStorage.getItem('crm_token');
+  if (token) {
+    // User is already logged in
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('app').classList.remove('hidden');
+    const user = JSON.parse(localStorage.getItem('crm_user'));
+    if (user) updateUserUI(user);
+    renderDashboard();
+  } else {
+    // Force login screen
+    document.getElementById('app').classList.add('hidden');
+  }
+};
 
 // ── NAVIGATION ───────────────────────────────────────────────
 let currentPage='dashboard';
@@ -562,12 +671,13 @@ async function submitTicket(){
 }
 
 // ── DETAIL PANEL ─────────────────────────────────────────────
-async function openDetail(id){
+async function openDetail(id) {
   document.getElementById('detail-overlay').classList.remove('hidden');
-  document.getElementById('detail-panel').innerHTML='<div class="loading">Loading ticket…</div>';
-  try{
-    const t=await api('/tickets/'+id);
-    document.getElementById('detail-panel').innerHTML=`
+  document.getElementById('detail-panel').innerHTML = '<div class="loading">Loading ticket…</div>';
+  
+  try {
+    const t = await api('/tickets/' + id);
+    document.getElementById('detail-panel').innerHTML = `
       <div class="detail-panel-header">
         <div>
           <div style="font-size:11px;color:var(--muted)">${t.ticket_ref}</div>
@@ -575,51 +685,97 @@ async function openDetail(id){
         </div>
         <button class="btn btn-sm" onclick="closeDetailPanel()">✕</button>
       </div>
+      
       <div class="detail-section">
         <h4>Status</h4>
         <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
           ${statusBadge(t.status)}
-          <select onchange="updateStatus(${t.id},this.value)" style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px">
-            ${['Open','In Progress','Pending','Resolved'].map(s=>`<option ${t.status===s?'selected':''}>${s}</option>`).join('')}
-          </select>
           <span class="${priClass(t.priority)}" style="font-size:12px">${t.priority} Priority</span>
         </div>
       </div>
+      
       <div class="detail-section">
         <h4>Customer</h4>
         <div class="detail-row"><span class="detail-key">Name</span><span class="detail-val">${t.customer_name}</span></div>
-        <div class="detail-row"><span class="detail-key">Phone</span><span class="detail-val">${t.customer_phone||'—'}</span></div>
-        <div class="detail-row"><span class="detail-key">Region</span><span class="detail-val">${t.customer_region||'—'}</span></div>
+        <div class="detail-row"><span class="detail-key">Phone</span><span class="detail-val">${t.customer_phone || '—'}</span></div>
+        <div class="detail-row"><span class="detail-key">Region</span><span class="detail-val">${t.customer_region || '—'}</span></div>
       </div>
+      
       <div class="detail-section">
         <h4>Product & Issue</h4>
-        <div class="detail-row"><span class="detail-key">Product</span><span class="detail-val"><span class="product-badge">${t.product||'—'}</span></span></div>
-        <div class="detail-row"><span class="detail-key">Serial</span><span class="detail-val" style="font-family:monospace">${t.serial_number||'—'}</span></div>
-        <div class="detail-row"><span class="detail-key">Source</span><span class="detail-val">${t.source||'—'}</span></div>
-        <div class="detail-row"><span class="detail-key">Reported By</span><span class="detail-val">${t.reported_by||'—'} (${t.reporter_role||'—'})</span></div>
-        <div class="detail-row"><span class="detail-key">Agent</span><span class="detail-val">${t.assigned_agent||'—'}</span></div>
-        <div style="margin-top:10px;padding:10px;background:#f8fafc;border-radius:6px;font-size:13px;color:#334155">${t.description||'No description.'}</div>
+        <div class="detail-row"><span class="detail-key">Product</span><span class="detail-val"><span class="product-badge">${t.product || '—'}</span></span></div>
+        <div class="detail-row"><span class="detail-key">Serial</span><span class="detail-val" style="font-family:monospace">${t.serial_number || '—'}</span></div>
+        <div class="detail-row"><span class="detail-key">Source</span><span class="detail-val">${t.source || '—'}</span></div>
+        <div class="detail-row"><span class="detail-key">Reported By</span><span class="detail-val">${t.reported_by || '—'} (${t.reporter_role || '—'})</span></div>
+        ${t.attachments ? `<div style="margin-top:10px;"><a href="${t.attachments}" target="_blank" class="btn btn-sm" style="color:var(--blue); border-color:var(--blue-light); background:var(--blue-light);">📎 View Uploaded Photos</a></div>` : ''}
+        <div style="margin-top:10px;padding:10px;background:#f8fafc;border-radius:6px;font-size:13px;color:#334155">${t.description || 'No description.'}</div>
       </div>
+
+      <div class="resolution-box" style="background: #fffbeb; border-bottom: 1px solid var(--border);">
+        <h4 style="color: #92400e;">Stage 2: CX Damage Assessment</h4>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <select id="assessment-decision" style="padding:8px 10px; border:1px solid var(--border); border-radius:6px; outline:none; font-family:inherit;">
+            <option value="">-- Select Decision --</option>
+            <option value="Approved for Manager Review">Approve for Manager Review</option>
+            <option value="Rejected">Reject Request</option>
+            <option value="More Information Required">Request More Info (Pending)</option>
+          </select>
+          <textarea id="assessment-notes" placeholder="Add notes, reasons for rejection, or info required..." style="padding:10px; border:1px solid var(--border); border-radius:6px; resize:vertical; min-height:60px; font-size:13px; font-family:inherit; outline:none;"></textarea>
+          <div>
+            <button class="btn btn-primary" id="btn-assess" onclick="submitAssessment(${t.id})" style="background:#d97706; border-color:#d97706;">Submit Assessment</button>
+          </div>
+        </div>
+      </div>
+
       <div class="detail-section">
         <h4>Timeline</h4>
         <ul class="timeline">
-          ${(t.timeline||[]).map(e=>`<li class="tl-item">
+          ${(t.timeline || []).map(e => `<li class="tl-item">
             <div class="tl-dot"></div>
             <div><div class="tl-text">${e.event_text}</div><div class="tl-time">${fmtTime(e.created_at)}</div></div>
           </li>`).join('')}
         </ul>
       </div>
-      ${t.resolution?`<div class="detail-section"><h4>Resolution</h4><div style="padding:10px;background:#e8f5ee;border-radius:6px;font-size:13px;color:var(--green)">${t.resolution}</div></div>`:''}
+
+      ${t.resolution ? `<div class="detail-section"><h4>Resolution</h4><div style="padding:10px;background:#e8f5ee;border-radius:6px;font-size:13px;color:var(--green)">${t.resolution}</div></div>` : ''}
+      
       <div class="resolution-box">
         <h4>Log Resolution / Note</h4>
-        <textarea id="resolution-input" placeholder="Type resolution or a note…">${t.resolution||''}</textarea>
+        <textarea id="resolution-input" placeholder="Type resolution or a note…">${t.resolution || ''}</textarea>
         <div style="display:flex;gap:8px;margin-top:8px">
           <button class="btn btn-primary" onclick="saveResolution(${t.id})">Save Resolution</button>
           <button class="btn" onclick="addNote(${t.id})">Add Note</button>
         </div>
       </div>
     `;
-  }catch(e){document.getElementById('detail-panel').innerHTML=`<div class="loading">Error: ${e.message}</div>`;}
+  } catch (e) {
+    document.getElementById('detail-panel').innerHTML = `<div class="loading">Error: ${e.message}</div>`;
+  }
+}
+
+async function submitAssessment(id) {
+  const decision = document.getElementById('assessment-decision').value;
+  const notes = document.getElementById('assessment-notes').value.trim();
+
+  if (!decision) {
+    toast('Please select an assessment decision first.');
+    return;
+  }
+
+  const btn = document.getElementById('btn-assess');
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+
+  try {
+    await api('/tickets/' + id + '/assessment', 'PATCH', { decision, notes });
+    toast('Assessment submitted. Ownership transferred.');
+    openDetail(id); // Reloads the ticket panel to show the new status & timeline
+    renderPage(currentPage); // Refreshes the dashboard lists behind it
+  } catch (e) {
+    toast('Error: ' + e.message);
+    btn.textContent = 'Submit Assessment';
+    btn.disabled = false;
+  }
 }
 
 function closeDetailPanel(){document.getElementById('detail-overlay').classList.add('hidden');}
@@ -763,7 +919,6 @@ async function verifyCarbonEntry(id){
 }
 
 // ── INIT ─────────────────────────────────────────────────────
-renderDashboard();
 </script>
 </body>
 </html>
